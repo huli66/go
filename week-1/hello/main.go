@@ -17,4 +17,14 @@ func init() {
 func main() {
 	fmt.Println("hello", rand.Int())
 	mrand.Rand()
+
+	var (
+		a bool   = true
+		b string = "123"
+		c int    = 12
+	)
+
+	d, a := false, false
+
+	fmt.Println(a, b, c, d)
 }
