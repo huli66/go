@@ -60,6 +60,7 @@ func arraySlice() {
 		}
 	}
 	fmt.Println(s8, a8)
+
 }
 
 func Pic(dx, dy int) [][]uint8 {

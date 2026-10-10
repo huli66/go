@@ -7,5 +7,6 @@ import (
 func main() {
 	fmt.Println("start")
 	// pointer2()
-	arraySlice()
+	// arraySlice()
+	mapTest()
 }
