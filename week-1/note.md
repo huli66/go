@@ -392,8 +392,95 @@ nil 接口值既不保存类型也不保存值，调用方法会 panic，因为�
 指定 0 个方法的接口称为空接口，可以保存任意值
 `any` 是 `interface {}` 的别名，两者等价
 
+类型断言
+```go
+t := i.(T)
+// 如果 i 保存的不是 T 类型则 panic
+t, ok := i.(T)
+// 不会 panic，如果 ok 为 false，则 t 为 T 类型的零值
+```
+
+类型选择
+```go
+switch t := i.(type) {
+	case T: 
+	case int:
+	case S:
+	default:
+}
+
+type myPerson Person // 定义一个新类型，不是别名
+	// 新类型只继承字段不继承方法
+````
+
+`Stringer` 是最常见的接口之一，返回一个字符串，fmt.Println 打印一个结构体，会调用结构体的 `String` 方法
+
 ## 错误处理
 
+错误处理还要重学，Stringer Reader Image 都是为了实现类似重写系统方法（比如 js 的 toString），方便标准库调用，比如读取会调用 Read，重写之后会按照自己的意愿读取
+**重新理解接口和错误**
+
+创建错误的三种方式
+```go
+errors.New("")
+
+return fmt.Errorf("error: %s\n", reason)
+
+// 用接口自定义错误
+func (e *Validated) Error() string {}
+
+// 哨兵模式 + error.Is 判断是否特定的错误
+var ErrNotFound := errors.new("not found") // 包级
+if errors.Is(err, ErrNotFound) {}
+
+// errors.As 判断是否某种类型错误，并取出字段
+var ve *Validated
+if errors.As(err, &ve) {
+	fmt.Println("出错字段是", ve.Field)
+}
+
+var e *ValidationError = nil
+```
+
+可预期的普通错误，都应该用 error
+真正的不可预期的错误，会报 panic
+
+**接口值内部由类型和值两部分组成，只有两者都为空的时候，接口才等于 nil，如果返回了一个有类型的 nil，则接口值不等于 nil**
+没有错误时直接 return nil，不要返回带类型的 nil
+
+
+
+`%w` 包装原错误，`errors.Is` `errors.As` 可以顺着包装链找到
+
+`errors.As` 取出错误字段
+```go
+var ve *ValidationError      // ① 准备一个空变量，类型就是你想要找的那种错误
+if errors.As(err, &ve) {     // ② 传入它的地址
+	ve.Field                  // ③ 找到了，ve 已经被赋值，可以取出字段
+}
+
+// 新版
+if ve, ok := errors.AsType[*ValidationError](err); ok {
+			fmt.Println("请检查字段", ve.Field, ve.Msg)
+		}
+```
+
 ## 泛型
+
+泛型类型出现在函数参数前，用方括号包裹
+用来约束参数类型？
+
+**具名函数只能在包级声明，函数内部只能声明匿名函数**
+
+```go
+func Index[T comparable] (a []T, x T) int {
+	for i, v := range a {
+		if a == v {
+			return i
+		}
+	}
+	return -1
+}
+````
 
 ## 并发

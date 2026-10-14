@@ -33,6 +33,26 @@ func (c *Circle) Area() float64 {
 	return 3.14 * c.R * c.R
 }
 
+type Person struct {
+	Name string
+	age  int
+}
+
+func (p Person) String() string {
+	type plain Person // 定义一个新类型，不是别名
+	// 新类型只继承字段不继承方法
+	return fmt.Sprintf("%#v, %+v, %v (%v years)\n", p, plain(p), p.Name, p.age)
+}
+
+func Index[T comparable](a []T, x T) int {
+	for i, v := range a {
+		if x == v {
+			return i
+		}
+	}
+	return -1
+}
+
 func methodTest() {
 	fmt.Println("method")
 	s := Student{
@@ -67,4 +87,20 @@ func methodTest() {
 	type Zeroi interface{}
 	var zzz Zeroi = 0
 	fmt.Println(zzz)
+
+	// 类型断言
+	var h any = "hello"
+	if t, ok := h.(float64); ok {
+		fmt.Println("打印", t)
+	} else {
+		fmt.Println("zzz 没有保存 Zeroi 类型，则 t 为该类型零值", t)
+	}
+
+	p1 := Person{"huli", 18}
+	p2 := Person{"li", 19}
+	fmt.Println(p1, p2)
+
+	ss1 := []string{"hell0", "hi", "yeah"}
+	idx := Index(ss1, "hi")
+	fmt.Println(idx)
 }
