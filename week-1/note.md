@@ -484,3 +484,31 @@ func Index[T comparable] (a []T, x T) int {
 ````
 
 ## 并发
+
+### goroutine
+
+goroutine 可以理解为一个由 go 运行时管理的超轻量“线程”，启动一个只需要几 kB 内存，开几十万个都不是问题
+按内存计算，8 * 1024 *1024 / 2KB（栈初始内存）
+
+不够时会自动扩容，64 位系统上最大 1G
+
+**main 结束，所有 goroutine 也会被强制终止**
+main 本身也是一个 goroutine，（main goroutine）
+
+GOMAXPROCS=1 go run . 设置运行的核心数
+
+一个 goroutine 实际占用的资源包括
+- 栈，初始 2KB，存放局部变量、参数、返回地址，每个 goroutine 一份
+- 管理结构 g，几百字节，每个 goroutine 一份，运行时用来调度它的信息：包括栈的位置、状态、调度的寄存器等
+- 代码，编译出来的机器指令，大小不一，所有 goroutine 共享
+- 堆，make、new 创建的数据，逃逸到堆上的变量，按需分配大小，也是 **所有 goroutine 共享**
+
+go 命令是创建任务并放入待执行队列
+
+用 `sync.WaitGroup` 可以进行等待 goroutine 执行完毕，老版本需要手动 `wg.Add(1) defer wg.Done()` 来计数，新版本只需要把方法包裹在 `wg.Go(func(){})` 里面
+
+`time.Sleep(time.Duration())` 只保证至少等待毫秒数唤醒，多等待几毫秒也是正常情况，连续多个 sleep 就会出现比较大的偏差了
+
+### channel
+
+goroutine 里面 channel 写入了但是没读取完，就会阻塞（类似 await，后面的代码在有人读取之前，都不会继续执行）
