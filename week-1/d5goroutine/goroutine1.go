@@ -14,14 +14,28 @@ func say(s string) {
 	}
 }
 
-func download(name string, ch chan int) {
+func download(name string, ch chan<- int) {
 	t := rand.IntN(4000) + 1000
 	time.Sleep(time.Duration(t) * time.Millisecond)
 	ch <- t // 写入
 	fmt.Println("complete", t, name)
 }
 
-func main() {
+func gen(n int) <-chan int {
+	ch := make(chan int)
+
+	go func() {
+		// 提前登记 defer，就算 panic 也会执行
+		defer close(ch)
+		for i := range n {
+			fmt.Println("write", i)
+			ch <- i
+		}
+	}()
+	return ch
+}
+
+func main1() {
 	var wg sync.WaitGroup
 
 	for i := range 3 {
@@ -38,17 +52,39 @@ func main() {
 	ch := make(chan int)
 	for _, f := range files {
 		fmt.Println("download", f)
-		go download(f, ch)
-		// wg.Go(func() { download(f, ch) })
+		// go download(f, ch)
+		wg.Go(func() { download(f, ch) })
 	}
-	wg.Wait()
+	go func() {
+		fmt.Println("close1")
+		wg.Wait()
+		fmt.Println("close2")
+		close(ch)
+	}()
+	fmt.Println("close3")
+	// close(ch)
 	endTime := time.Since(start)
 	total := 0
-	// ch <- 2
-	for range files {
-		time.Sleep(2000)
-		total += <-ch
+	for v := range ch {
+		time.Sleep(2000 * time.Millisecond)
+		fmt.Print("v", v)
 	}
-	ch <- 2
+	// ch <- 2
+	// for range files {
+	// 	time.Sleep(2000)
+	// 	total += <-ch
+	// }
+	// ch <- 2
+	time.Sleep(1000 * time.Millisecond)
 	fmt.Println("start", start, "end", endTime, total)
+
+}
+
+func dl(name string)
+
+func main() {
+	ch2 := gen(5)
+	for chc := range ch2 {
+		fmt.Println("read", chc)
+	}
 }

@@ -512,3 +512,21 @@ go 命令是创建任务并放入待执行队列
 ### channel
 
 goroutine 里面 channel 写入了但是没读取完，就会阻塞（类似 await，后面的代码在有人读取之前，都不会继续执行）
+
+channel 不要在同一个 goroutine 里面读写（因为会阻塞），也不要先读后写，都会导致死锁
+
+`ch chan<- int` 类型限定只能写入
+`ch <-chan int` 类型限定只能读取
+
+`for v := range ch` 可以持续读取 channel 内的信息，直到 **close且数据读完**（就算读完了也不会停，继续阻塞）
+
+往已关闭的 channel 发送，会 panic
+
+有缓冲 channel，在缓冲塞满之前不会阻塞
+
+**没人读，就阻塞无法写入**
+天然可以做限制并发数的令牌桶
+
+`ch := make(chan T, n)` 缓冲区 容量为n (cap(ch)), 长度默认为 0（len(ch)）
+
+close 必须写在 goroutine 里，谁负责发送谁负责关闭，否则很容易关闭之后继续写入
